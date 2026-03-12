@@ -29,7 +29,11 @@
             />
           </el-checkbox-group>
         </div>
-        <div v-if="clusters" ref="chart" style="width: 100%; height: 380px"></div
+        <div
+          v-if="clusters"
+          ref="chart"
+          style="width: 100%; height: 380px; "
+        ></div
       ></el-tab-pane>
 
       <el-tab-pane label="Details" name="second">Details</el-tab-pane>
@@ -51,7 +55,6 @@ const datasetName = computed({
   set: (val) => {},
 });
 const chart = ref(null);
-const summaryChart = ref();
 const summarySeries = ref();
 const clusterK = ref(4);
 const clusters = ref();
@@ -79,6 +82,7 @@ const formatKey = (key) => {
   return key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 const selectClusters = (val) => {
+    let mychart = echarts.getInstanceByDom(chart.value);
   if (oldClusters.value.length > val.length) {
     let id = oldClusters.value.filter((id) => !val.includes(id))[0];
     console.log(id);
@@ -86,18 +90,20 @@ const selectClusters = (val) => {
       .filter((s) => s.name.includes(" " + id + " "))
       .map((s) => s.name);
     names.forEach((name) => {
-      summaryChart.value.dispatchAction({
+      mychart.dispatchAction({
         type: "legendUnSelect",
         name,
       });
     });
   } else {
     let id = val.filter((id) => !oldClusters.value.includes(id))[0];
-    let names = summarySeries.value
-      .filter((s) => s.name.includes(" " + id + " "))
-      .map((s) => s.name);
+    let names = [];
+    activeTypes.value.forEach((type) => {
+      names.push("Cluster " + id + " " + type);
+    });
+
     names.forEach((name) => {
-      summaryChart.value.dispatchAction({
+      mychart.dispatchAction({
         type: "legendSelect",
         name,
       });
@@ -106,6 +112,7 @@ const selectClusters = (val) => {
   oldClusters.value = val;
 };
 const selectTypes = (val) => {
+    let mychart = echarts.getInstanceByDom(chart.value);
   if (oldTypes.value.length > val.length) {
     let id = oldTypes.value.filter((id) => !val.includes(id))[0];
     console.log(id);
@@ -113,18 +120,20 @@ const selectTypes = (val) => {
       .filter((s) => s.name.includes(id))
       .map((s) => s.name);
     names.forEach((name) => {
-      summaryChart.value.dispatchAction({
+      mychart.dispatchAction({
         type: "legendUnSelect",
         name,
       });
     });
   } else {
-    let id = val.filter((id) => !oldTypes.value.includes(id))[0];
-    let names = summarySeries.value
-      .filter((s) => s.name.includes(id))
-      .map((s) => s.name);
+    let type = val.filter((type) => !oldTypes.value.includes(type))[0];
+
+    let names = [];
+    activeClusters.value.forEach((id) => {
+      names.push("Cluster " + id + " " + type);
+    });
     names.forEach((name) => {
-      summaryChart.value.dispatchAction({
+      mychart.dispatchAction({
         type: "legendSelect",
         name,
       });
@@ -149,6 +158,7 @@ const getClusters = async () => {
       return cluster.cluster_id;
     });
     oldClusters.value = activeClusters.value = allClusters.value;
+    oldTypes.value = activeTypes.value = ["median", "range", "centroid"];
     nextTick(() => {
       drawClusters();
     });
@@ -157,8 +167,8 @@ const getClusters = async () => {
   }
 };
 const drawClusters = () => {
-  summaryChart.value = echarts.init(chart.value);
-  summarySeries.value = clusters.value.flatMap((cluster) => {
+  const mychart = echarts.init(chart.value);
+  let series = clusters.value.flatMap((cluster) => {
     const x = cluster.median_sequence.map((_, i) => i);
     const centroid = cluster.centroid_sequence.map((d) => d[0]);
     const median = cluster.median_sequence.map((d) => d[0]);
@@ -207,6 +217,7 @@ const drawClusters = () => {
     tooltip: {
       trigger: "axis",
       formatter: function (params) {
+        console.log(params);
         return params
           .map((p) => {
             return `${p.seriesName}: ${p.data[1].toFixed(3)}`;
@@ -223,10 +234,10 @@ const drawClusters = () => {
     },
     xAxis: { type: "value", name: "Time step" },
     yAxis: { type: "value", name: "Value", scale: true },
-    series: summarySeries.value,
+    series,
   };
-  console.log(summarySeries.value);
-  summaryChart.value.setOption(option);
+  summarySeries.value = series;
+  mychart.setOption(option);
 };
 </script>
 

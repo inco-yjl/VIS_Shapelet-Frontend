@@ -95,7 +95,7 @@
         </el-collapse>
       </el-card>
       <div class="router-buttons">
-        <el-button @click="toPartB" type="primary">Show Shapelet Library Panel</el-button>
+        <el-button @click="toPartB" type="primary">Show The Shapelet Library Panel</el-button>
       </div>
     </div>
     <div class="partA-content">

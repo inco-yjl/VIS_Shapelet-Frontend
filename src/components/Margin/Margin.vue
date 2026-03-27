@@ -28,7 +28,7 @@
       </div>
     </div>
 
-    <div ref="chartRef" style="width: calc(100% - 40px); height: 280px"></div>
+    <div ref="chartRef" style="width: calc(100% - 40px); height: 350px"></div>
   </div>
 </template>
 <script setup>

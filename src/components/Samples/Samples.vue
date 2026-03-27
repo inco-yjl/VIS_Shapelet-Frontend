@@ -4,9 +4,12 @@
       <div class="title">Test Samples Clustered By Predicted Class</div>
       <div class="meta">
         <span>Total Samples: {{ allSummaries.length }}</span>
-        <span v-if="activeClusterKey">Loaded In Cluster: {{ activeClusterLoadedCount }}</span>
+        <span v-if="activeClusterKey"
+          >Loaded In Cluster: {{ activeClusterLoadedCount }}</span
+        >
         <span v-if="activeClusterDepthSummary">
-          Soft Depth Range: {{ toFixedSafe(activeClusterDepthSummary.minDepth) }} ~
+          Soft Depth Range:
+          {{ toFixedSafe(activeClusterDepthSummary.minDepth) }} ~
           {{ toFixedSafe(activeClusterDepthSummary.maxDepth) }}
         </span>
         <el-button
@@ -50,7 +53,9 @@
         <div ref="chartRef" class="cluster-chart"></div>
 
         <div class="sample-list">
-          <div class="list-title">Samples In This Cluster (sorted by soft depth)</div>
+          <div class="list-title">
+            Samples In This Cluster (sorted by soft depth)
+          </div>
           <div class="list-tools">
             <el-switch
               v-model="onlyMisclassified"
@@ -69,7 +74,9 @@
                 controls-position="right"
               />
             </div>
-            <span class="selected-count">Selected: {{ selectedSampleIds.length }}</span>
+            <span class="selected-count"
+              >Selected: {{ selectedSampleIds.length }}</span
+            >
           </div>
           <el-table
             ref="sampleTableRef"
@@ -105,18 +112,29 @@
 
       <div class="detail-line" v-if="selectedSamples.length">
         <span>Selected Count: {{ selectedSamples.length }}</span>
-        <span>IDs: {{ selectedSamples.map((s) => s.sample_id).join(", ") }}</span>
+        <span
+          >IDs: {{ selectedSamples.map((s) => s.sample_id).join(", ") }}</span
+        >
       </div>
     </div>
 
-    <div v-else class="empty-state">No sample data loaded for current dataset.</div>
+    <div v-else class="empty-state">
+      No sample data loaded for current dataset.
+    </div>
   </div>
 </template>
 
 <script setup>
 import axios from "@/scripts/axios.js";
 import * as echarts from "echarts";
-import { computed, defineProps, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import {
+  computed,
+  defineProps,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from "vue";
 
 const props = defineProps({
   datasetName: {
@@ -152,7 +170,9 @@ const outerTopK = ref(80);
 let topKRenderDebounceTimer = null;
 
 const classLabels = computed(() => {
-  const labels = Object.keys(props.classDistribution || {}).map((v) => Number(v));
+  const labels = Object.keys(props.classDistribution || {}).map((v) =>
+    Number(v)
+  );
   return labels.filter((v) => !Number.isNaN(v)).sort((a, b) => a - b);
 });
 
@@ -199,7 +219,9 @@ const activeClusterSamples = computed(() => {
 const isMisclassified = (sample) => {
   const pred = sample?.prediction?.pred_class;
   const label = sample?.label;
-  return typeof pred === "number" && typeof label === "number" && pred !== label;
+  return (
+    typeof pred === "number" && typeof label === "number" && pred !== label
+  );
 };
 
 const displayClusterSamples = computed(() => {
@@ -210,7 +232,9 @@ const displayClusterSamples = computed(() => {
 const selectedSamples = computed(() => {
   if (!selectedSampleIds.value.length) return [];
   const idSet = new Set(selectedSampleIds.value.map((id) => String(id)));
-  return activeClusterSamples.value.filter((sample) => idSet.has(String(sample.sample_id)));
+  return activeClusterSamples.value.filter((sample) =>
+    idSet.has(String(sample.sample_id))
+  );
 });
 
 const activeClusterLoadedCount = computed(() => {
@@ -232,7 +256,9 @@ const normalizeSelectedIds = (ids) => {
 };
 
 const normalizeSequence = (sequence) => {
-  return (sequence || []).map((point) => (Array.isArray(point) ? Number(point[0]) : Number(point)));
+  return (sequence || []).map((point) =>
+    Array.isArray(point) ? Number(point[0]) : Number(point)
+  );
 };
 
 const getClassSamplesOnePage = async (label, offset, limit) => {
@@ -329,11 +355,16 @@ const trimSequencesToMatrix = (details) => {
       sampleId: String(detail.sample_id),
       seq: normalizeSequence(detail.sequence),
     }))
-    .filter((item) => item.seq.length > 1 && item.seq.every((v) => Number.isFinite(v)));
+    .filter(
+      (item) => item.seq.length > 1 && item.seq.every((v) => Number.isFinite(v))
+    );
 
   if (!parsed.length) return null;
 
-  const minLen = parsed.reduce((m, item) => Math.min(m, item.seq.length), parsed[0].seq.length);
+  const minLen = parsed.reduce(
+    (m, item) => Math.min(m, item.seq.length),
+    parsed[0].seq.length
+  );
   const sampleIds = parsed.map((item) => item.sampleId);
   const X = parsed.map((item) => item.seq.slice(0, minLen));
   return { sampleIds, X, T: minLen };
@@ -343,7 +374,8 @@ const mean1d = (arr) => arr.reduce((sum, v) => sum + v, 0) / arr.length;
 
 const std1d = (arr, eps = 1e-8) => {
   const m = mean1d(arr);
-  const variance = arr.reduce((sum, v) => sum + (v - m) * (v - m), 0) / arr.length;
+  const variance =
+    arr.reduce((sum, v) => sum + (v - m) * (v - m), 0) / arr.length;
   return Math.max(Math.sqrt(variance), eps);
 };
 
@@ -363,8 +395,15 @@ const computeSoftDepthAgainstMean = (X, eps = 1e-8) => {
   const N = X.length;
   const T = X[0].length;
 
-  const meanCurve = Array.from({ length: T }, (_, t) => mean1d(X.map((row) => row[t])));
-  const sigmaT = Array.from({ length: T }, (_, t) => std1d(X.map((row) => row[t]), eps));
+  const meanCurve = Array.from({ length: T }, (_, t) =>
+    mean1d(X.map((row) => row[t]))
+  );
+  const sigmaT = Array.from({ length: T }, (_, t) =>
+    std1d(
+      X.map((row) => row[t]),
+      eps
+    )
+  );
 
   const W = X.map((row) =>
     row.map((value, t) => {
@@ -378,12 +417,19 @@ const computeSoftDepthAgainstMean = (X, eps = 1e-8) => {
   return { depth, meanCurve, sigmaT, W };
 };
 
-const getCentralBandByDepth = (X, depth, centralRatio = 0.5, bandMode = "quantile") => {
+const getCentralBandByDepth = (
+  X,
+  depth,
+  centralRatio = 0.5,
+  bandMode = "quantile"
+) => {
   const N = X.length;
   const T = X[0].length;
   const k = Math.max(1, Math.ceil(N * centralRatio));
 
-  const orderHighToLow = Array.from({ length: N }, (_, i) => i).sort((a, b) => depth[b] - depth[a]);
+  const orderHighToLow = Array.from({ length: N }, (_, i) => i).sort(
+    (a, b) => depth[b] - depth[a]
+  );
   const centralIdx = orderHighToLow.slice(0, k);
   const centralCurves = centralIdx.map((idx) => X[idx]);
 
@@ -407,19 +453,19 @@ const getCentralBandByDepth = (X, depth, centralRatio = 0.5, bandMode = "quantil
 const buildDepthState = (clusterKey) => {
   const cache = clusterDetailCache.value[clusterKey];
   if (!cache?.loaded) return null;
-  const details = Object.values(cache.detailsById || {}).filter((detail) => detail?.sequence?.length);
+  const details = Object.values(cache.detailsById || {}).filter(
+    (detail) => detail?.sequence?.length
+  );
   const matrixData = trimSequencesToMatrix(details);
   if (!matrixData) return null;
 
   const { sampleIds, X, T } = matrixData;
   const { depth, meanCurve, W } = computeSoftDepthAgainstMean(X);
-  const orderLowToHigh = Array.from({ length: depth.length }, (_, i) => i).sort((a, b) => depth[a] - depth[b]);
-  const { centralIdx, lowerBand, upperBand, orderHighToLow } = getCentralBandByDepth(
-    X,
-    depth,
-    CENTRAL_RATIO,
-    BAND_MODE
+  const orderLowToHigh = Array.from({ length: depth.length }, (_, i) => i).sort(
+    (a, b) => depth[a] - depth[b]
   );
+  const { centralIdx, lowerBand, upperBand, orderHighToLow } =
+    getCentralBandByDepth(X, depth, CENTRAL_RATIO, BAND_MODE);
 
   const depthBySampleId = {};
   sampleIds.forEach((sampleId, idx) => {
@@ -427,7 +473,9 @@ const buildDepthState = (clusterKey) => {
   });
 
   const centralSet = new Set(centralIdx);
-  const outerIndices = Array.from({ length: X.length }, (_, i) => i).filter((idx) => !centralSet.has(idx));
+  const outerIndices = Array.from({ length: X.length }, (_, i) => i).filter(
+    (idx) => !centralSet.has(idx)
+  );
   const outerSortedIndices = outerIndices.sort((a, b) => depth[a] - depth[b]);
 
   const baseSamples = clusterMap.value[clusterKey]?.samples || [];
@@ -497,7 +545,10 @@ const renderSoftDepthPanels = (clusterKey) => {
   const xAxisData = Array.from({ length: T }, (_, i) => i);
   const selectedSet = new Set(selectedSampleIds.value.map((id) => String(id)));
 
-  const topKValue = Math.max(1, Math.min(OUTER_CURVE_TOP_K_MAX, Number(outerTopK.value) || 1));
+  const topKValue = Math.max(
+    1,
+    Math.min(OUTER_CURVE_TOP_K_MAX, Number(outerTopK.value) || 1)
+  );
   const outerTopKIndices = outerSortedIndices.slice(0, topKValue);
   const panelSeries = outerTopKIndices.map((idx) => ({
     id: `sample-${sampleIds[idx]}`,
@@ -601,10 +652,17 @@ const renderSoftDepthPanels = (clusterKey) => {
         opacity: 0,
       },
       z: 6,
-    },
+    }
   );
 
-  const selectedPalette = ["#2563eb", "#1d4ed8", "#0ea5e9", "#0284c7", "#0891b2", "#3b82f6"];
+  const selectedPalette = [
+    "#2563eb",
+    "#1d4ed8",
+    "#0ea5e9",
+    "#0284c7",
+    "#0891b2",
+    "#3b82f6",
+  ];
   const selectedSeries = sampleIds
     .map((sampleId, idx) => ({ sampleId, idx }))
     .filter((item) => selectedSet.has(item.sampleId))
@@ -656,6 +714,21 @@ const renderSoftDepthPanels = (clusterKey) => {
       ],
       tooltip: {
         trigger: "axis",
+        formatter: function (params) {
+          let res = params[0].axisValue + "<br/>";
+
+          params.forEach((p) => {
+            let val = p.data;
+
+            if (typeof val === "number") {
+              val = val.toFixed(3);
+            }
+
+            res += `${p.marker}${p.seriesName}: ${val}<br/>`;
+          });
+
+          return res;
+        },
       },
       series: panelSeries,
     },
@@ -674,14 +747,18 @@ const ensureClusterDetailsLoaded = async (clusterKey) => {
     return;
   }
 
-  const sampleIds = clusterMap.value[key].samples.map((s) => s.sample_id).filter(Boolean);
+  const sampleIds = clusterMap.value[key].samples
+    .map((s) => s.sample_id)
+    .filter(Boolean);
   if (!sampleIds.length) {
     clusterDetailCache.value[key] = { loaded: true, detailsById: {} };
     return;
   }
 
   const loadingPromise = (async () => {
-    const details = await mapWithConcurrency(sampleIds, 8, async (sampleId) => getSampleDetail(sampleId));
+    const details = await mapWithConcurrency(sampleIds, 8, async (sampleId) =>
+      getSampleDetail(sampleId)
+    );
     const detailsById = {};
     details.forEach((detail) => {
       if (!detail?.sample_id) return;
@@ -750,7 +827,9 @@ const toggleSampleSelection = async (sampleId) => {
 };
 
 const onTableSelectionChange = (rows) => {
-  selectedSampleIds.value = normalizeSelectedIds(rows.map((row) => row.sample_id));
+  selectedSampleIds.value = normalizeSelectedIds(
+    rows.map((row) => row.sample_id)
+  );
   const key = Number(activeClusterKey.value);
   if (!Number.isNaN(key) && clusterDepthCache.value[key]) {
     renderSoftDepthPanels(key);
@@ -823,7 +902,8 @@ const loadAndRenderActiveCluster = async () => {
     await recomputeAndRenderCluster(key);
   } catch (error) {
     console.log("error", error);
-    errorMessage.value = "Failed to load soft-depth visualization for the selected cluster.";
+    errorMessage.value =
+      "Failed to load soft-depth visualization for the selected cluster.";
   } finally {
     clusterLoading.value = false;
   }
@@ -847,7 +927,11 @@ watch(
 );
 
 watch(
-  () => [onlyMisclassified.value, activeClusterKey.value, activeClusterSamples.value.length],
+  () => [
+    onlyMisclassified.value,
+    activeClusterKey.value,
+    activeClusterSamples.value.length,
+  ],
   async () => {
     await syncTableSelection();
   }
@@ -856,7 +940,10 @@ watch(
 watch(
   () => outerTopK.value,
   () => {
-    const normalized = Math.max(1, Math.min(OUTER_CURVE_TOP_K_MAX, Number(outerTopK.value) || 1));
+    const normalized = Math.max(
+      1,
+      Math.min(OUTER_CURVE_TOP_K_MAX, Number(outerTopK.value) || 1)
+    );
     if (normalized !== outerTopK.value) {
       outerTopK.value = normalized;
       return;

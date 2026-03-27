@@ -95,7 +95,9 @@
         </el-collapse>
       </el-card>
       <div class="router-buttons">
-        <el-button @click="toPartB" type="primary">Show The Shapelet Library Panel</el-button>
+        <el-button @click="toPartB" type="primary"
+          >Show The Shapelet Library Panel</el-button
+        >
       </div>
     </div>
     <div class="partA-content">
@@ -147,7 +149,10 @@
         </div>
       </div>
       <div class="partA-bottom" v-if="showBottom">
-        <samples-content />
+        <samples-content
+          :datasetName="datasetName"
+          :classDistribution="metrics?.class_distribution || {}"
+        />
         <margin-content
           :datasetName="datasetName"
           :threshold="margin_threshold"
@@ -188,8 +193,8 @@ const getBottomData = () => {
   showBottom.value = true;
 };
 const toPartB = () => {
-  router.push({name: "ShapeletLibraryPanel"})
-}
+  router.push({ name: "ShapeletLibraryPanel" });
+};
 const getDatasetList = async () => {
   try {
     let response = await axios({

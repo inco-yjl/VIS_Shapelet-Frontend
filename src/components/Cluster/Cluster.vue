@@ -219,17 +219,19 @@ const drawDetailCluster = () => {
   const q25 = cluster.q25_sequence.map((d) => d[0]);
   const q75 = cluster.q75_sequence.map((d) => d[0]);
 
-  const shadowData = q75.concat(q25.slice().reverse()).map((y, i) => [i, y]);
-
   const baseColor = cmaps[0];
 
   const series = [
+    buildRangePolygonSeries("Range", x, q25, q75, baseColor + "22"),
     {
-      name: "Range",
+      name: "Median",
       type: "line",
-      data: shadowData,
-      lineStyle: { opacity: 0 },
-      areaStyle: { color: baseColor + "22" },
+      data: median.map((y, i) => [x[i], y]),
+      lineStyle: {
+        color: baseColor,
+        width: 3,
+      },
+      itemStyle: { opacity: 0 },
       showSymbol: false,
     },
     {
@@ -290,6 +292,37 @@ const drawDetailCluster = () => {
 
   mychart.setOption(option);
 };
+const buildRangePolygonSeries = (
+  name,
+  xValues,
+  lowerBand,
+  upperBand,
+  fillColor
+) => ({
+  name,
+  type: "custom",
+  data: [0],
+  silent: true,
+  tooltip: { show: false },
+  renderItem: (params, api) => {
+    const points = [];
+    for (let i = 0; i < xValues.length; i += 1) {
+      points.push(api.coord([xValues[i], upperBand[i]]));
+    }
+    for (let i = xValues.length - 1; i >= 0; i -= 1) {
+      points.push(api.coord([xValues[i], lowerBand[i]]));
+    }
+    return {
+      type: "polygon",
+      shape: { points },
+      style: api.style({
+        fill: fillColor,
+        stroke: "none",
+      }),
+    };
+  },
+});
+
 const drawClusters = () => {
   const mychart = echarts.init(chart.value);
   let series = clusters.value.flatMap((cluster) => {
@@ -299,18 +332,14 @@ const drawClusters = () => {
     const q25 = cluster.q25_sequence.map((d) => d[0]);
     const q75 = cluster.q75_sequence.map((d) => d[0]);
 
-    const shadowData = q75.concat(q25.slice().reverse()).map((y, i) => [i, y]);
-
     return [
-      {
-        name: `Cluster ${cluster.cluster_id} range`,
-        type: "line",
-        data: shadowData,
-        lineStyle: { opacity: 0 },
-        areaStyle: { color: cmaps[cluster.cluster_id % cmaps.length] + "33" },
-        showSymbol: false,
-      },
-
+      buildRangePolygonSeries(
+        `Cluster ${cluster.cluster_id} range`,
+        x,
+        q25,
+        q75,
+        cmaps[cluster.cluster_id % cmaps.length] + "33"
+      ),
       {
         name: `Cluster ${cluster.cluster_id} median`,
         type: "line",
